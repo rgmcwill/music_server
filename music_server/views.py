@@ -1,13 +1,18 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, get_object_or_404
+from django.conf import settings
 from django.contrib.auth import logout
 from django.http import JsonResponse
 from django.db.models import Q
-from .models import Song, Playlist
+from .dbSong import DB_Song_Interface
 from .forms import UserForm
+
+from .indexing import *
 
 AUDIO_FILE_TYPES = ['wav', 'mp3', 'ogg']
 IMAGE_FILE_TYPES = ['png', 'jpg', 'jpeg']
+
+db = DB_Song_Interface
 
 def index(request):
 	if not request.user.is_authenticated:
@@ -15,7 +20,7 @@ def index(request):
 	else:
 		#Will query here
 		#albums = Album.objects.filter(user=request.user)
-		song_results = Song.objects.all()
+		song_results = db.get_all_songs(db)
 		query = request.GET.get("q")
 		if query:
 			print('A query was sent, and it was : ', query)
@@ -32,7 +37,8 @@ def index(request):
 				'songs': song_results,
 			})'''
 		else:
-			return render(request, 'index.html', {})
+			print(list(db.get_all_songs(db)))
+			return render(request, 'index.html', {"songs" : list(db.get_all_songs(db))})
 
 def register(request):
 
@@ -86,3 +92,7 @@ def songs(request):
 
 def create_playlist(request):
 	return render(request, 'login.html')
+
+def update_songs(request):
+	rec_music_index('media/music/')
+	return render(request, 'index.html')
